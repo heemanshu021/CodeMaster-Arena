@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CodeMaster Arena - Leaderboard</title>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+  <link rel="icon" type="image/jpeg" href="CodeMaster Pro.jpeg">
+</head>
+<body>
+
+  <header style="max-width:768px; margin:0 auto; padding: 1rem;">
+    <nav style="display:flex; justify-content:space-between; align-items:center;">
+      <button class="back-btn" onclick="window.location.href='Main.html'">← Return to Base</button>
+      <div style="font-weight:600;">CodeMaster Gamified <span style="color:var(--primary);">Logic Arena</span></div>
+    </nav>
+  </header>
+
+  <main style="max-width:768px; margin:0 auto; padding:2rem 1rem;">
+    <div style="text-align:center; margin-bottom:2rem;">
+      <h1 style="font-size:2.5rem;">🏆 Global Rankings</h1>
+      
+      <!-- ADDED FILTER DROPDOWN -->
+      <div style="display:flex; gap:1rem; justify-content:center; align-items:center; margin-top:1.5rem; flex-wrap:wrap;">
+        <select id="langFilter" onchange="filterLeaderboard()" 
+                style="background:var(--glass-bg); border:1px solid var(--glass-border); color:var(--fg); padding:0.75rem 1rem; border-radius:8px; cursor:pointer; font-size:1rem;">
+          <option value="all">🌐 All Languages</option>
+          <option value="HTML5">🌐 HTML5</option>
+          <option value="CSS3">🎨 CSS3</option>
+          <option value="JavaScript">🟨 JavaScript</option>
+          <option value="Python">🐍 Python</option>
+          <option value="C Programming">🔵 C Programming</option>
+        </select>
+        
+      </div>
+    </div>
+    
+    <div id="leaderboard-container" class="animate-slide-up">
+      <p style="text-align:center; color:var(--fg-muted);">Loading rankings...</p>
+    </div>
+  </main>
+
+<script>
+const BACKEND_URL = 'http://127.0.0.1:5000';
+let allScores = []; // Global me sab scores save karenge filter ke liye
+
+async function loadLeaderboard() {
+    const container = document.getElementById('leaderboard-container');
+    try {
+        console.log("Asking Leaderboard from Python...");
+        const response = await fetch(BACKEND_URL + '/leaderboard');
+        const scores = await response.json();
+        
+        console.log("Backend se mila:", scores);
+        allScores = scores; // Global variable me save kar liya
+        
+        displayLeaderboard(scores); // Display function alag bana diya
+
+    } catch (error) {
+        console.log("Leaderboard did not load:", error);
+        container.innerHTML = `
+          <div class="glass-card" style="padding:3rem; text-align:center; border:1px solid var(--danger);">
+            <div style="font-size:3rem; margin-bottom:1rem;">⚠️</div>
+            <h3 style="color:var(--danger); margin-bottom:0.5rem;">Could not connect with BACKEND</h3>
+            <p style="color:var(--fg-muted);">Start 'python backend.py' in the Terminal!</p>
+            <button onclick="loadLeaderboard()" style="margin-top:1rem; background:var(--primary); color:white; padding:0.5rem 1.5rem; border-radius:8px; border:none; cursor:pointer;">
+              Retry
+            </button>
+          </div>
+        `;
+    }
+}
+
+// NAYA FUNCTION: Filter logic
+function filterLeaderboard() {
+    const selectedLang = document.getElementById('langFilter').value;
+    console.log("Filter selected:", selectedLang);
+    
+    if(selectedLang === 'all') {
+        displayLeaderboard(allScores); // Sab dikhao
+    } else {
+        const filtered = allScores.filter(entry => entry.lang === selectedLang);
+        displayLeaderboard(filtered); // Sirf selected language
+    }
+}
+
+// NAYA FUNCTION: Display logic alag kar diya
+function displayLeaderboard(scores) {
+    const container = document.getElementById('leaderboard-container');
+    
+    if (scores.length === 0) {
+        container.innerHTML = `
+          <div class="glass-card" style="padding:3rem; text-align:center;">
+            <div style="font-size:3rem; margin-bottom:1rem;">🎯</div>
+            <p style="color:var(--fg-muted);">No data entries found for this filter.</p>
+            <p style="color:var(--fg-muted); font-size:0.9rem;">Be the first to initiate a challenge.</p>
+          </div>
+        `;
+        return;
+    }
+
+    // Score % ke hisaab se sort karo - high to low
+    scores.sort((a, b) => (b.score/b.total) - (a.score/a.total));
+
+    let html = `
+      <div class="glass-card" style="padding:1.5rem;">
+        <table style="width:100%; border-collapse:collapse;">
+          <thead>
+            <tr style="border-bottom:2px solid var(--primary); color:var(--primary);">
+              <th style="padding:1rem; text-align:left;">Rank</th>
+              <th style="padding:1rem; text-align:left;">Player</th>
+              <th style="padding:1rem; text-align:left;">Language</th>
+              <th style="padding:1rem; text-align:left;">Score</th>
+              <th style="padding:1rem; text-align:left;">Accuracy</th>
+            </tr>
+          </thead>
+          <tbody>
+    `;
+    
+    scores.forEach((entry, index) => {
+        const percent = Math.round((entry.score / entry.total) * 100);
+        const medal = index === 0 ? '🥇' : index === 1 ? '🥈' : index === 2 ? '🥉' : `${index + 1}`;
+        const rowStyle = index < 3 ? 'background:rgba(99, 102, 241, 0.1);' : '';
+        
+        html += `
+            <tr style="border-bottom:1px solid rgba(255,255,255,0.05); ${rowStyle}">
+                <td style="padding:1rem; font-weight:700; font-size:1.1rem;">${medal}</td>
+                <td style="padding:1rem; font-weight:600;">${entry.name}</td>
+                <td style="padding:1rem;">
+                  <span style="background:rgba(99, 102, 241, 0.2); padding:0.25rem 0.75rem; border-radius:12px; font-size:0.85rem;">
+                    ${entry.lang}
+                  </span>
+                </td>
+                <td style="padding:1rem; font-family:'JetBrains Mono';">
+                  <strong>${entry.score}/${entry.total}</strong>
+                </td>
+                <td style="padding:1rem;">
+                  <div style="display:flex; align-items:center; gap:0.5rem;">
+                    <div style="width:60px; height:6px; background:rgba(255,255,255,0.1); border-radius:3px; overflow:hidden;">
+                      <div style="width:${percent}%; height:100%; background:${percent >= 80 ? '#22c55e' : percent >= 50 ? '#f59e0b' : '#ef4444'};"></div>
+                    </div>
+                    <span style="font-family:'JetBrains Mono'; font-size:0.9rem;">${percent}%</span>
+                  </div>
+                </td>
+            </tr>
+        `;
+    });
+    
+    html += '</tbody></table></div>';
+    container.innerHTML = html;
+}
+
+
+// Page load hote hi leaderboard le aao
+loadLeaderboard();
+
+// Auto-refresh har 10 second me
+setInterval(loadLeaderboard, 10000);
+</script>
+
+</body>
+</html>

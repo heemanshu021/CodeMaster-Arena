@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CodeMaster Arena - Dashboard</title>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+  <link rel="icon" type="image/jpeg" href="CodeMaster Pro.jpeg">
+</head>
+<body>
+  
+  <header class="navbar">
+    <div class="inner">
+      <div class="logo" onclick="window.location.href='Main.html'" role="link" aria-label="CodeMaster Pro Home" style="cursor:pointer;">
+        <span aria-hidden="true">⌨️</span> CodeMaster Gamified <span class="dot">Logic Arena</span>
+      </div>
+      <nav class="nav-links" aria-label="Main Navigation">
+        <button class="nav-link-btn active" onclick="window.location.href='Main.html'" aria-current="page">
+          <span aria-hidden="true">🏠</span> <span class="label">Home</span>
+        </button>
+        <button class="nav-link-btn" onclick="window.location.href='Leaderboard.html'">
+          <span aria-hidden="true">🏆</span> <span class="label">Leaderboard</span>
+        </button>
+        <button class="nav-link-btn" onclick="window.location.href='About.html'">
+          <span aria-hidden="true">ℹ️</span> <span class="label">About</span>
+        </button>
+        
+        <span class="user-info" id="displayUserName" aria-label="Current User Profile"></span>
+        <button class="nav-link-btn" onclick="logout()" style="color:var(--danger);" aria-label="Logout">
+          <span aria-hidden="true">🚪</span>
+        </button>
+      </nav>
+    </div>
+  </header>
+
+  <main id="main-content" style="max-width:1100px; margin:0 auto; padding:4rem 1rem 2rem;">    
+    <header class="animate-slide-up" style="text-align:center; margin-bottom:3rem;">
+      <div style="font-size:2.5rem; margin-bottom:1rem;" aria-hidden="true">⌨️</div>
+      <h1 style="font-size:clamp(2rem,5vw,3rem); font-weight:700; margin-bottom:0.75rem;">
+        Welcome, <span id="heroUserName" style="color:var(--primary);" class="neon-text"></span>
+      </h1>
+      <p style="font-size:1.125rem; color:var(--fg-muted); max-width:36rem; margin:0 auto;">
+        Programming Logic Arena — Master coding concepts through interactive challenges
+      </p>
+    </header>
+
+    <section class="lang-grid" id="langGrid" aria-label="Available Programming Challenges" role="list"></section>
+  </main>
+
+<script>
+  // Configuration: Definition of supported languages and UI metadata
+  // This program creates a list of programming languages with their icons, names, and other info.
+  const languages = [
+    { id: "html", name: "HTML5", icon: "🌐", qCount: 13, color: "#e34c26" },
+    { id: "css", name: "CSS3", icon: "🎨", qCount: 13, color: "#264de4" },
+    { id: "js", name: "JavaScript", icon: "🟨", qCount: 14, color: "#f7df1e" },
+    { id: "py", name: "Python", icon: "🐍", qCount: 12, color: "#3776ab" },
+    { id: "c", name: "C Programming", icon: "🔵", qCount: 10, color: "#a8b9cc" }
+  ];
+
+  // Performance Optimized: Generic Data Access Layer with JSON safety
+  //This program gets data from your browser's storage. If it finds the data, it gives it to you. If not, it gives you a default value.
+  const getData = (key, fallback = null) => {
+    try {
+      const item = sessionStorage.getItem(key) || localStorage.getItem(key);
+      return item ? JSON.parse(item) : fallback;
+    } catch (e) {
+      console.error(`Error parsing ${key}:`, e);
+      return fallback;
+    }
+  };
+
+  // Auth Guard: Redirect to login if user session is missing
+  //This program checks if you're logged in. If not, it sends you to the login page.
+  const user = getData("codemaster_user");
+  if (!user) { 
+    window.location.href = "Login.html"; 
+  }
+
+  // Session Management: Clear user data and redirect
+  //This program removes your login info and sends you to the login page.
+  function logout() {
+    sessionStorage.removeItem("codemaster_user");
+    window.location.href = "Login.html";
+  }
+
+  // Logic to calculate best scores: O(n) efficiency pass through leaderboard data
+  //This program calculates your best scores for each language.
+  const getUserStats = () => {
+    const lb = getData("codemaster_lb", []);
+    const stats = {};
+    
+    // Find the maximum score per language for the current user
+    lb.forEach(entry => {
+      if (entry.email === user?.email) {
+        stats[entry.lang] = Math.max(stats[entry.lang] || 0, entry.scorePercentage);
+      }
+    });
+    return stats;
+  };
+
+  // UI Rendering: Dynamically creates language cards
+  //This program creates a list of language cards on the page.
+  function renderLangGrid() {
+    const grid = document.getElementById("langGrid");
+    if (!grid) return;
+
+    const userBestScores = getUserStats();
+    
+    // Build HTML string in memory to minimize DOM reflows
+    grid.innerHTML = languages.map((lang, i) => {
+      const bestScore = userBestScores[lang.id];
+      const hasScore = bestScore !== undefined;
+
+      // Conditional badge for users who have completed a challenge
+      const bestBadge = hasScore 
+        ? `<span role="status" style="font-size:0.75rem; font-family:var(--mono); padding:0.25rem 0.5rem; border-radius:9999px; background:rgba(34,197,94,0.15); color:var(--success); border:1px solid rgba(34,197,94,0.3);">Best: ${bestScore}%</span>`
+        : '';
+
+      return `
+        <article class="glass-card lang-card animate-slide-up" 
+             role="listitem"
+             tabindex="0"
+             aria-labelledby="title-${lang.id}"
+             style="animation-delay:${i * 0.1}s; cursor:pointer;" 
+             onclick="startQuiz('${lang.id}')"
+             onkeydown="if(event.key==='Enter' || event.key===' ') { event.preventDefault(); startQuiz('${lang.id}'); }">
+          
+          <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:1rem;">
+            <span style="font-size:2.5rem;" aria-hidden="true">${lang.icon}</span>
+            ${bestBadge}
+          </div>
+          
+          <h2 id="title-${lang.id}" style="font-size:1.125rem; font-weight:700; margin-bottom:0.25rem;">${lang.name}</h2>
+          <p style="font-size:0.875rem; color:var(--fg-muted); margin-bottom:1rem;">${lang.qCount} Challenges Available</p>
+          
+          <div aria-hidden="true" style="display:block; width:100%; padding:0.5rem; border-radius:0.5rem; text-align:center; font-size:0.875rem; font-weight:600; border:1px solid ${lang.color}; color:${lang.color}; transition:all 0.3s;">
+            Start Challenge →
+          </div>
+        </article>
+      `;
+    }).join("");
+  }
+
+  // Quiz Redirect Logic (saves the language choosen,takes us to quiz page)
+  function startQuiz(langId) {
+    localStorage.setItem("selectedLang", langId);
+    window.location.href = "Quiz.html";
+  }
+
+  // Unified Initialization: Populate user info and render grid (write name)
+  //This program runs when the page loads. It checks if you're logged in and renders the language grid if you are.
+  if (user) {
+    const firstName = user?.name?.split(" ")[0] ?? "Coder";
+    const heroName = document.getElementById("heroUserName");
+    const displayName = document.getElementById("displayUserName");
+    
+    if (heroName) heroName.textContent = firstName;
+    if (displayName) displayName.textContent = `@${firstName}`;
+    
+    renderLangGrid();
+  }
+
+  //API
+// ========================================================
+// REFINED SCI-FI AUDIO SYSTEM (Single Hover Sound Only) 
+// ========================================================
+
+const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+
+// A single, premium "Tick" sound 
+function playInteractionSound() {
+  if (audioCtx.state === 'suspended') audioCtx.resume();
+  
+  const oscillator = audioCtx.createOscillator();
+  const gainNode = audioCtx.createGain();
+  
+  oscillator.type = 'sine'; // Extremely smooth sound
+  oscillator.frequency.setValueAtTime(800, audioCtx.currentTime); 
+  oscillator.frequency.exponentialRampToValueAtTime(300, audioCtx.currentTime + 0.04); // Instant pitch drop
+  
+  gainNode.gain.setValueAtTime(0.05, audioCtx.currentTime); // Very quiet (5%)
+  gainNode.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.04); // Instantly fades out
+  
+  oscillator.connect(gainNode);
+  gainNode.connect(audioCtx.destination);
+  
+  oscillator.start();
+  oscillator.stop(audioCtx.currentTime + 0.04);
+}
+
+// Select all the visual cards on your page
+const interactiveElements = document.querySelectorAll('.lang-card, .diff-card, .btn-login, .option-btn, .nav-link-btn, .feature-card');
+
+// Attach the ONE sound to the starting hover ONLY
+interactiveElements.forEach(element => {
+  element.addEventListener('mouseenter', () => playInteractionSound());
+});
+</script>
+</body>
+</html>

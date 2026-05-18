@@ -1,0 +1,151 @@
+About.html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CodeMaster Arena - About</title>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+  <link rel="icon" type="image/jpeg" href="CodeMaster Pro.jpeg">
+</head>
+<body>
+  
+  <header class="navbar">
+    <div class="inner">
+      <a href="Main.html" class="logo" aria-label="CodeMaster Pro Home" style="text-decoration: none; color: inherit; cursor: pointer;">
+        <span aria-hidden="true">⌨️</span> CodeMaster Gamified <span class="dot">Logic Arena</span>
+      </a>
+      
+      <nav aria-label="Primary Navigation">
+        <ul class="nav-links" style="list-style: none; display: flex; gap: 1rem; align-items: center;">
+          <li><button class="nav-link-btn" onclick="window.location.href='Main.html'">🏠 <span class="label">Home</span></button></li>
+          <li><button class="nav-link-btn" onclick="window.location.href='Leaderboard.html'">🏆 <span class="label">Leaderboard</span></button></li>
+          <li><button class="nav-link-btn active" aria-current="page" onclick="window.location.href='About.html'">ℹ️ <span class="label">About</span></button></li>
+          <li><span class="user-info" id="displayUserName"></span></li>
+          <li><button class="nav-link-btn" aria-label="Logout" onclick="logout()" style="color:var(--danger); background: none; border: none; cursor: pointer;">🚪</button></li>
+        </ul>
+      </nav>
+    </div>
+  </header>
+
+  <main style="max-width:768px; margin:0 auto; padding:4rem 1rem;">
+    <button class="back-btn" onclick="window.location.href='Main.html'" aria-label="Back to main dashboard">
+      ← Return to Base
+    </button>
+    
+    <article>
+      <h1 style="font-size:2.25rem; font-weight:700; margin-bottom:1rem;" class="neon-text animate-slide-up">
+        System Architecture
+      </h1>
+      
+      <p class="animate-slide-up" style="color:var(--fg-muted); margin-bottom:2.5rem; font-size:1.1rem; line-height:1.6;">
+        A high-performance programming logic training arena engineered for Chittkara University students.
+        Built with modern web technologies enforcing ES6 standards and dynamic DOM manipulation.
+      </p>
+      
+      <section aria-label="Platform Features">
+        <div id="featuresGrid" style="display:grid; grid-template-columns:repeat(auto-fit, minmax(300px, 1fr)); gap:1.5rem;">
+        </div>
+      </section>
+    </article>
+  </main>
+
+<script>
+  // 1. SECURE & ROBUST USER INITIALIZATION
+  let user = null;
+  try {
+    // Using Nullish Coalescing (??) to prevent JSON.parse(null) errors
+    user = JSON.parse(sessionStorage.getItem("codemaster_user") ?? "null");
+  } catch (error) {
+    console.error("Auth Error: Session data corrupted.", error);
+  }
+
+  // Guard Clause for Authentication: Redirect if no user session exists
+  if (!user) {
+    window.location.href = "Login.html";
+  } else {
+
+    // 2. PERFORMANCE OPTIMIZED DOM UPDATES
+    // Using Optional Chaining (?.) to prevent crashes if name is undefined (check if user is logged in , if it is then display their 1st name)
+    const firstName = user?.name?.split(" ")[0] ?? "User";
+    const nameDisplay = document.getElementById("displayUserName");
+    if (nameDisplay) {
+      nameDisplay.textContent = `@${firstName}`;
+    }
+  }
+
+  // 3. MODULAR LOGOUT FUNCTION
+  // Cleans up local session and returns to login
+  function logout() {
+    sessionStorage.removeItem("codemaster_user");
+    window.location.href = "Login.html";
+  }
+
+  // 4. DATA MODEL (MODULAR ARRAY)
+  // List of technical features displayed on the page
+  const aboutFeatures = [
+    { icon: "🔐", title: "Secure Auth", desc: "University-grade authentication restricting access to @chitkara.edu.in accounts." },
+    { icon: "⚡", title: "ES6 DOM Manipulation", desc: "Engineered using modern JavaScript modules and local storage caching." },
+    { icon: "🏆", title: "Global Leaderboard", desc: "Real-time ranking tracking algorithm persisting your top attempts." },
+    { icon: "🎨", title: "Advanced CSS3", desc: "Utilizing Flexbox, 3D Transforms, Gradients, and Keyframe Animations." }
+  ];
+
+  // 5. PERFORMANCE OPTIMIZED RENDERING
+  const renderFeatures = () => {
+    const grid = document.getElementById("featuresGrid");
+    if (!grid) return;
+
+    // We build the string first to perform a single DOM injection (Performance Optimized)
+    const featuresHTML = aboutFeatures.map((f, i) => `
+      <section class="glass-card feature-card animate-slide-up" style="animation-delay:${i * 0.1}s;">
+        <div style="font-size:2.5rem; margin-bottom:1rem;" aria-hidden="true">${f.icon}</div>
+        <h2 style="font-weight:700; font-size:1.25rem; margin-bottom:0.5rem;">${f.title}</h2>
+        <p style="font-size:0.95rem; color:var(--fg-muted); line-height:1.5;">${f.desc}</p>
+      </section>
+    `).join("");
+
+    grid.innerHTML = featuresHTML;
+  };
+
+  // Initial Execution to populate the grid
+  renderFeatures();
+  
+  //API
+// ========================================================
+// REFINED SCI-FI AUDIO SYSTEM (Single Hover Sound Only) 
+// ========================================================
+
+const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+
+// A single, premium "Tick" sound 
+function playInteractionSound() {
+  if (audioCtx.state === 'suspended') audioCtx.resume();
+  
+  const oscillator = audioCtx.createOscillator();
+  const gainNode = audioCtx.createGain();
+  
+  oscillator.type = 'sine'; // Extremely smooth sound
+  oscillator.frequency.setValueAtTime(800, audioCtx.currentTime); 
+  oscillator.frequency.exponentialRampToValueAtTime(300, audioCtx.currentTime + 0.04); // Instant pitch drop
+  
+  gainNode.gain.setValueAtTime(0.05, audioCtx.currentTime); // Very quiet (5%)
+  gainNode.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.04); // Instantly fades out
+  
+  oscillator.connect(gainNode);
+  gainNode.connect(audioCtx.destination);
+  
+  oscillator.start();
+  oscillator.stop(audioCtx.currentTime + 0.04);
+}
+
+// Select all the visual cards on your page
+const interactiveElements = document.querySelectorAll('.lang-card, .diff-card, .btn-login, .option-btn, .nav-link-btn, .feature-card');
+
+// Attach the ONE sound to the starting hover ONLY
+interactiveElements.forEach(element => {
+  element.addEventListener('mouseenter', () => playInteractionSound());
+});
+</script>
+</body>
+</html>
